@@ -1,0 +1,62 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Student profile containing basic info and target examination",
+      "type": "object",
+      "required": ["uid", "name", "targetExam", "targetYear", "createdAt", "updatedAt"],
+      "properties": {
+        "uid": { "type": "string", "description": "The Firebase User ID" },
+        "name": { "type": "string", "description": "Student name" },
+        "targetExam": { "type": "string", "enum": ["JEE", "JEE Advanced", "NEET-UG"], "description": "Target exam" },
+        "targetYear": { "type": "number", "description": "Target year of appearing" },
+        "createdAt": { "type": "number", "description": "Creation timestamp" },
+        "updatedAt": { "type": "number", "description": "Last update timestamp" }
+      }
+    },
+    "SubjectMockTest": {
+      "title": "Subject Mock Test",
+      "description": "Log of a mock test specific to a subject",
+      "type": "object",
+      "required": ["userId", "subject", "attemptedQuestions", "correctAnswers", "wrongAnswers", "percentage", "testDate", "createdAt", "updatedAt"],
+      "properties": {
+        "userId": { "type": "string" },
+        "subject": { "type": "string", "enum": ["Physics", "Chemistry", "Mathematics", "Botany", "Zoology"] },
+        "attemptedQuestions": { "type": "number", "description": "Number of questions attempted" },
+        "correctAnswers": { "type": "number", "description": "Number of correct answers" },
+        "wrongAnswers": { "type": "number", "description": "Number of wrong answers" },
+        "percentage": { "type": "number", "description": "Calculated percentage" },
+        "testDate": { "type": "number", "description": "Date of the test" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      }
+    },
+    "FullMockTest": {
+      "title": "Full Mock Test",
+      "description": "Log of a full mock test",
+      "type": "object",
+      "required": ["userId", "percentage", "testDate", "createdAt", "updatedAt"],
+      "properties": {
+        "userId": { "type": "string" },
+        "percentage": { "type": "number", "description": "Percentage earned" },
+        "testDate": { "type": "number", "description": "Date of the test" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Stores user profiles"
+    },
+    "/users/{userId}/subjectMockTests/{testId}": {
+      "schema": "SubjectMockTest",
+      "description": "Stores logs of subject mock tests"
+    },
+    "/users/{userId}/fullMockTests/{testId}": {
+      "schema": "FullMockTest",
+      "description": "Stores logs of full mock tests"
+    }
+  }
+}

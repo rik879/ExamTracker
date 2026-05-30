@@ -1,0 +1,101 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} { allow read, write: if false; }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isSignedIn() { return request.auth != null; }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'name', 'targetExam', 'targetYear', 'createdAt', 'updatedAt'])
+        && data.uid == request.auth.uid
+        && data.name is string && data.name.size() <= 200 && data.name.size() > 0
+        && data.targetExam is string && data.targetExam in ['JEE', 'JEE Advanced', 'NEET-UG']
+        && data.targetYear is number && data.targetYear > 2000 && data.targetYear < 2100
+        && data.createdAt is number
+        && data.updatedAt is number;
+    }
+
+    match /users/{userId} {
+      allow get: if isSignedIn() && request.auth.uid == userId && isValidId(userId);
+      allow create: if isSignedIn() && request.auth.uid == userId && isValidId(userId)
+                    && isValidUser(incoming())
+                    && incoming().keys().size() == 6;
+      allow update: if isSignedIn() && request.auth.uid == userId && isValidId(userId)
+                    && isValidUser(incoming())
+                    && incoming().keys().size() == 6
+                    && incoming().createdAt == existing().createdAt
+                    && incoming().uid == existing().uid
+                    && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'targetExam', 'targetYear', 'updatedAt']);
+    }
+
+    function isValidSubjectMockTest(data, userId) {
+      return data.keys().hasAll(['id', 'userId', 'subject', 'totalQuestions', 'attemptedQuestions', 'correctAnswers', 'wrongAnswers', 'hasNegativeMarking', 'score', 'percentage', 'testDate', 'createdAt', 'updatedAt'])
+        && data.id is string
+        && data.userId == userId
+        && data.subject is string && data.subject in ['Physics', 'Chemistry', 'Mathematics', 'Botany', 'Zoology']
+        && data.totalQuestions is number
+        && data.attemptedQuestions is number
+        && data.correctAnswers is number
+        && data.wrongAnswers is number
+        && data.hasNegativeMarking is bool
+        && data.score is number
+        && data.percentage is number
+        && data.testDate is number
+        && data.createdAt is number
+        && data.updatedAt is number;
+    }
+
+    match /users/{userId}/subjectMockTests/{testId} {
+      allow read: if isSignedIn() && request.auth.uid == userId && isValidId(userId);
+      allow create: if isSignedIn() && request.auth.uid == userId && isValidId(userId) && isValidId(testId)
+                    && exists(/databases/$(database)/documents/users/$(userId))
+                    && isValidSubjectMockTest(incoming(), userId)
+                    && incoming().keys().size() == 13;
+      allow update: if isSignedIn() && request.auth.uid == userId && isValidId(userId) && isValidId(testId)
+                    && exists(/databases/$(database)/documents/users/$(userId))
+                    && isValidSubjectMockTest(incoming(), userId)
+                    && incoming().userId == existing().userId
+                    && incoming().createdAt == existing().createdAt
+                    && incoming().diff(existing()).affectedKeys().hasOnly(['subject', 'totalQuestions', 'attemptedQuestions', 'correctAnswers', 'wrongAnswers', 'hasNegativeMarking', 'score', 'percentage', 'testDate', 'updatedAt']);
+      allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(userId) && isValidId(testId)
+                    && existing().userId == userId;
+    }
+
+    function isValidFullMockTest(data, userId) {
+      return data.keys().hasAll(['id', 'userId', 'totalQuestions', 'attemptedQuestions', 'correctAnswers', 'wrongAnswers', 'hasNegativeMarking', 'score', 'percentage', 'testDate', 'createdAt', 'updatedAt'])
+        && data.id is string
+        && data.userId == userId
+        && data.totalQuestions is number
+        && data.attemptedQuestions is number
+        && data.correctAnswers is number
+        && data.wrongAnswers is number
+        && data.hasNegativeMarking is bool
+        && data.score is number
+        && data.percentage is number
+        && data.testDate is number
+        && data.createdAt is number
+        && data.updatedAt is number;
+    }
+
+    match /users/{userId}/fullMockTests/{testId} {
+      allow read: if isSignedIn() && request.auth.uid == userId && isValidId(userId);
+      allow create: if isSignedIn() && request.auth.uid == userId && isValidId(userId) && isValidId(testId)
+                    && exists(/databases/$(database)/documents/users/$(userId))
+                    && isValidFullMockTest(incoming(), userId)
+                    && incoming().keys().size() == 12;
+      allow update: if isSignedIn() && request.auth.uid == userId && isValidId(userId) && isValidId(testId)
+                    && exists(/databases/$(database)/documents/users/$(userId))
+                    && isValidFullMockTest(incoming(), userId)
+                    && incoming().userId == existing().userId
+                    && incoming().createdAt == existing().createdAt
+                    && incoming().diff(existing()).affectedKeys().hasOnly(['totalQuestions', 'attemptedQuestions', 'correctAnswers', 'wrongAnswers', 'hasNegativeMarking', 'score', 'percentage', 'testDate', 'updatedAt']);
+      allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(userId) && isValidId(testId)
+                    && existing().userId == userId;
+    }
+  }
+}

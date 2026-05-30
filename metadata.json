@@ -1,0 +1,6 @@
+{
+  "name": "ExamTracker",
+  "description": "Track mock test performance and progress for competitive exams like JEE and NEET-UG.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
